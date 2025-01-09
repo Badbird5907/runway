@@ -1,0 +1,9 @@
+#terminal > div {
+  height: 100%;
+  scrollbar-width: thin;
+}
+
+#terminal > div > div.xterm-viewport {
+  scrollbar-width: thin;
+  scrollbar-color: #666 #333;
+}
