@@ -1,5 +1,5 @@
-// src/env.mjs
 import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
 
 export const env = createEnv({
   /*
@@ -15,6 +15,9 @@ export const env = createEnv({
    */
   client: {
   },
+  shared: {
+    BASE_URL: z.string().url(),
+  },
   /*
    * Due to how Next.js bundles environment variables on Edge and Client,
    * we need to manually destructure them to make sure all are included in bundle.
@@ -22,5 +25,9 @@ export const env = createEnv({
    * 💡 You'll get type errors if not all variables from `server` & `client` are included here.
    */
   runtimeEnv: {
+    BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
+
+  skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+  emptyStringAsUndefined: true,
 });

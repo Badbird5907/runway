@@ -1,0 +1,103 @@
+{
+  "name": "memfs",
+  "displayName": "Runway MemFS",
+  "description": "MemFS Implementation for Runway IDE",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.54.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onFileSystem:memfs"
+  ],
+  "browser": "./dist/web/extension.js",
+  "contributes": {
+		"commands": [
+			{
+				"command": "memfs.workspaceInit",
+				"title": "Setup Workspace",
+				"category": "MemFS"
+			},
+			{
+				"command": "memfs.init",
+				"title": "Create Files",
+				"category": "MemFS"
+			},
+			{
+				"command": "memfs.reset",
+				"title": "Delete Files",
+				"category": "MemFS"
+			},
+			{
+				"command": "memfs.deleteFile",
+				"title": "Delete \"file.txt\"",
+				"category": "MemFS"
+			},
+			{
+				"command": "memfs.addFile",
+				"title": "Add \"file.txt\"",
+				"category": "MemFS"
+			},
+      {
+        "command": "memfs.helloWorld",
+        "title": "Hello World",
+        "category": "MemFS"
+      }
+		],
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "memfs.init",
+					"when": "workbenchState == workspace"
+				},
+				{
+					"command": "memfs.reset",
+					"when": "workbenchState == workspace"
+				},
+				{
+					"command": "memfs.deleteFile",
+					"when": "workbenchState == workspace"
+				},
+				{
+					"command": "memfs.addFile",
+					"when": "workbenchState == workspace"
+				},
+				{
+					"command": "memfs.workspaceInit",
+					"when": "workbenchState != workspace"
+				}
+			]
+		}
+	},
+  "scripts": {
+    "test": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/extensionTests.js",
+    "pretest": "pnpm run compile-web",
+    "vscode:prepublish": "pnpm run package-web",
+    "compile-web": "pnpm run check-types && pnpm run lint && node esbuild.js",
+    "watch-web": "npm-run-all -p watch-web:*",
+    "watch-web:esbuild": "node esbuild.js --watch",
+    "watch-web:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package-web": "pnpm run check-types && pnpm run lint && node esbuild.js --production",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ."
+  },
+  "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@types/assert": "^1.5.11",
+    "@types/mocha": "^10.0.10",
+    "@types/vscode": "^1.54.0",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "@vscode/test-web": "^0.0.65",
+    "assert": "^2.1.0",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.16.0",
+    "glob": "^11.0.0",
+    "mocha": "^11.0.1",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.7.2"
+  }
+}

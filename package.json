@@ -2,9 +2,11 @@
   "name": "runway",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack -p 7581",
-    "build": "next build",
+    "build": "node link.js && next build",
+    "link": "node link.js",
     "start": "next start",
     "lint": "next lint"
   },

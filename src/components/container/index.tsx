@@ -57,7 +57,7 @@ export const WebContainerProvider = ({ children }: { children: React.ReactNode }
     if (status.current === 'booting') {
       status.current = 'ready';
       WebContainer.boot().then(async (instance) => {
-        instance.mount(files);
+        // instance.mount(files);
         setWebContainer(instance);
         instance.on('port', (port, type, url) => {
           listeners.current.port.forEach(({ callback }) => callback(port, type, url))
