@@ -1,11 +1,13 @@
 import { FilesIcon, SearchIcon, SettingsIcon } from "lucide-react";
 import { create } from "zustand";
 
-export const pages: { [key: string]: {
+export type Page = {
   name: string;
   icon: React.ElementType;
   bottom?: boolean;
-}} = {
+}
+export type AllPages = "files" | "search" | "settings";
+export const pages: { [key in AllPages]: Page} = {
   files: {
     name: "Files",
     icon: FilesIcon,
@@ -22,8 +24,8 @@ export const pages: { [key: string]: {
 }
 
 type IDERouterState = {
-  page: keyof typeof pages;
-  setPage: (page: keyof typeof pages) => void;
+  page: AllPages;
+  setPage: (page: AllPages) => void;
 }
 
 export const useIDERouter = create<IDERouterState>()(
