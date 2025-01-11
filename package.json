@@ -11,15 +11,12 @@
     "lint": "next lint"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@radix-ui/react-dialog": "^1.1.4",
     "@radix-ui/react-dropdown-menu": "^2.1.4",
     "@radix-ui/react-separator": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.6",
-=======
     "@monaco-editor/react": "^4.6.0",
->>>>>>> eb56eae4c4e1d9402485d57a2a7e5246287d555a
     "@t3-oss/env-nextjs": "^0.11.1",
     "@webcontainer/api": "1.5.1-internal.6",
     "@xterm/addon-fit": "^0.10.0",
