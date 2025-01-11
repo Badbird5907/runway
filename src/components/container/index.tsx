@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { PortListener, ServerReadyListener, PreviewMessageListener, ErrorListener, WebContainer, WebContainerProcess } from '@webcontainer/api';
-import { files } from '@/app/app/files';
+import { fileSystem } from '@/filesystem/zen-fs';
 
 type WebContainerStatus = 'booting' | 'ready' | 'error';
 
@@ -56,39 +56,42 @@ export const WebContainerProvider = ({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (status.current === 'booting') {
       status.current = 'ready';
-      WebContainer.boot().then(async (instance) => {
-        // instance.mount(files);
-        setWebContainer(instance);
-        instance.on('port', (port, type, url) => {
-          listeners.current.port.forEach(({ callback }) => callback(port, type, url))
-        });
-        instance.on('server-ready', (port, url) => {
-          listeners.current['server-ready'].forEach(({ callback }) => callback(port, url))
-        });
-        instance.on('preview-message', (message) => {
-          listeners.current['preview-message'].forEach(({ callback }) => callback(message))
-        });
-        instance.on('error', (error) => {
-          listeners.current['error'].forEach(({ callback }) => callback(error))
-        });
+      fileSystem.init().then(() => {
+        WebContainer.boot({ workdirName: "workspace" }).then(async (instance) => {
+          await fileSystem.mountWebContainer(instance);
+          
+          setWebContainer(instance);
+          instance.on('port', (port, type, url) => {
+            listeners.current.port.forEach(({ callback }) => callback(port, type, url))
+          });
+          instance.on('server-ready', (port, url) => {
+            listeners.current['server-ready'].forEach(({ callback }) => callback(port, url))
+          });
+          instance.on('preview-message', (message) => {
+            listeners.current['preview-message'].forEach(({ callback }) => callback(message))
+          });
+          instance.on('error', (error) => {
+            listeners.current['error'].forEach(({ callback }) => callback(error))
+          });
 
 
-        const shellProcess = await instance.spawn('jsh', {
-          terminal: {
-            cols: 80, // default for now
-            rows: 12,
-          },
-        });
-        setShellProcess(shellProcess);
-
-        shellProcess.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              listeners.current['shell-output'].forEach(({ callback }) => callback(data))
+          const shellProcess = await instance.spawn('jsh', {
+            terminal: {
+              cols: 80, // default for now
+              rows: 12,
             },
-          })
-        );
-      });
+          });
+          setShellProcess(shellProcess);
+
+          shellProcess.output.pipeTo(
+            new WritableStream({
+              write(data) {
+                listeners.current['shell-output'].forEach(({ callback }) => callback(data))
+              },
+            })
+          );
+        });
+      })
     }
   }, []);
 
@@ -108,13 +111,13 @@ export const WebContainerProvider = ({ children }: { children: React.ReactNode }
   };
 
   return (
-    <WebContainerContext.Provider value={{ 
-      webContainer, 
-      status: status.current, 
-      listeners, 
+    <WebContainerContext.Provider value={{
+      webContainer,
+      status: status.current,
+      listeners,
       shellProcess,
       addListener,
-      removeListener 
+      removeListener
     }}>
       {children}
     </WebContainerContext.Provider>

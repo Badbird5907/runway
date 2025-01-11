@@ -1,7 +1,7 @@
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
-import React, { useEffect } from "react";
+import { useEffect, createContext, useRef } from "react";
 
 import { ResizablePanel } from "@/components/ui/resizable";
 
@@ -9,9 +9,15 @@ import "@xterm/xterm/css/xterm.css";
 import "@/components/xterm-console/index.css";
 import { useWebContainer } from "@/components/container";
 
+export const TerminalStateProvider = createContext<{
+  resize: () => void;
+}>({
+  resize: () => {},
+});
+
 const XTermConsole = () => {
-  const termRef = React.useRef<HTMLDivElement>(null);
-  const term = React.useRef<Terminal>(
+  const termRef = useRef<HTMLDivElement>(null);
+  const term = useRef<Terminal>(
     new Terminal({
       convertEol: true,
       theme: {
@@ -37,8 +43,11 @@ const XTermConsole = () => {
       },
     }),
   );
-  const fitAddon = React.useRef<FitAddon>(new FitAddon());
-  const { shellProcess, addListener, removeListener } = useWebContainer();
+  const fitAddon = useRef<FitAddon>(new FitAddon());
+  const { status, shellProcess, addListener, removeListener } = useWebContainer();
+  useEffect(() => {
+    term.current.write(`[WebContainer] ${status}\n`);
+  }, [status])
 
   const resize = () => {
     fitAddon.current.fit();
@@ -50,7 +59,7 @@ const XTermConsole = () => {
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (termRef.current) {
       const terminal = term.current;
       terminal.loadAddon(fitAddon.current);
@@ -91,20 +100,23 @@ const XTermConsole = () => {
     }
  }, [addListener, removeListener, shellProcess]);
 
-  useEffect(() => {
-    if (shellProcess) {
-      const input = shellProcess.input.getWriter();
-      resize();
-      const disposable = term.current.onData((data) => {
-        input.write(data);
-      });
-
-      return () => {
-        disposable.dispose();
-        input.close();
-      }
+ useEffect(() => {
+  if (shellProcess) {
+    if (shellProcess.input.locked) {
+      term.current.write("Input is locked\n");
+      return;
     }
-  }, [shellProcess]);
+    const input = shellProcess.input.getWriter();
+    resize();
+    const disposable = term.current.onData((data) => {
+      input.write(data);
+    });
+    return () => {
+      disposable.dispose();
+      input.close();
+    }
+  }
+ }, [shellProcess])
 
   return (
     <ResizablePanel
@@ -112,7 +124,7 @@ const XTermConsole = () => {
       onResize={resize}
       className="h-full"
     >
-      <div id="terminal" ref={termRef} className={"w-full h-full "}></div>
+      <div id="terminal" ref={termRef} className={"w-full h-full"}></div>
     </ResizablePanel>
   );
 };
