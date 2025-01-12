@@ -6,6 +6,10 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+		fontFamily: {
+			mono: ["var(--font-geist-mono)"],
+			sans: ["var(--font-geist-sans)"],
+		},
   	extend: {
   		colors: {
   			background: 'hsl(var(--background))',

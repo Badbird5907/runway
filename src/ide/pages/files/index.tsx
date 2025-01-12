@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronRight, ChevronDown, File, FileSymlink } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import { FSNode } from "@/filesystem";
 import { FSDirectory, useFileSystem } from "@/filesystem";
-
+import { FileIcon } from '@/components/file-icon';
 interface FileTreeNodeProps {
   name: string;
   node: FSNode;
@@ -47,19 +47,14 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
   };
 
   const getIcon = () => {
-    if ('file' in node) return <File size={16} />;
-    if ('symlink' in node) return <FileSymlink size={16} />;
-    return isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />;
-    // return isOpen ? <FolderOpen size={16} /> : <Folder size={16} />;
+    return <FileIcon node={node} name={name} />
   };
-
-  // const getChevron = () => {
-  //   if ('directory' in node) {
-  //     return isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />;
-  //   }
-  //   return <span className="w-4" />;
-  // };
-
+  const getChevron = () => {
+    if ('directory' in node) {
+      return isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />;
+    }
+    return <span className="w-4" />;
+  };
   const sorted = "directory" in node ? sortedEntries(node) : [];
 
   return (
@@ -79,6 +74,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
         }}
         onClick={toggleOpen}
       >
+        {getChevron()}
         {getIcon()}
         <span className="ml-1">{name}</span>
       </div>
@@ -99,7 +95,7 @@ export const FilesPage = () => {
   
   return (
     <div className="group bg-sidebar p-2 font-mono text-sm h-full overflow-auto">
-      <h2 className="font-semibold mb-2">EXPLORER</h2>
+      <h2 className="font-semibold font-sans mb-2">EXPLORER</h2>
       {sorted.map(([name, node]) => (
         <FileTreeNode key={name} name={name} node={node} level={0} fullPath={"/" + name} />
       ))}

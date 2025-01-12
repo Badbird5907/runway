@@ -12,7 +12,7 @@ const App = () => {
       <SidebarProvider open={false}>
         <IDESidebar />
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={10}>
+          <ResizablePanel defaultSize={20}>
             <IDESidebarContent />
           </ResizablePanel>
           <ResizableHandle withHandle />
