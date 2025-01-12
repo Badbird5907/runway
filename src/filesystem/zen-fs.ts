@@ -1,13 +1,21 @@
 import { FSNode, useFileSystem } from "@/filesystem";
 import { bufferWatchEvents } from "@/lib/utils/buffer";
+import { getEncoding } from "@/lib/utils/istextorbinary";
 import { DirectoryNode, FileNode, FileSystemTree, SymlinkNode, WebContainer } from "@webcontainer/api";
 import { configure, fs as zenFs } from "@zenfs/core";
 import { IndexedDB } from '@zenfs/dom';
-import { getEncoding } from 'istextorbinary';
 
 // const utf8TextDecoder = new TextDecoder('utf8', { fatal: true });
 class ZenFileSystemHandler {
   constructor() {}
+
+  initial: {
+    files: FileSystemTree;
+    editorFiles: { [key: string]: FSNode };
+  } = {
+    files: {},
+    editorFiles: {}
+  };
 
   async init()  {
     await configure({
@@ -16,11 +24,6 @@ class ZenFileSystemHandler {
       }
     })
     zenFs.writeFileSync("/test.txt", "Hello World");
-  }
-
-  async mountWebContainer(webContainer: WebContainer) {
-    const files: FileSystemTree = {};
-    const editorFiles: { [key: string]: FSNode } = {};
 
     const setFiles = useFileSystem.getState().setFiles;
     
@@ -97,15 +100,17 @@ class ZenFileSystemHandler {
     const results = await Promise.all(buildPromises);
     
     for (const { dir, result, editorState } of results) {
-      files[dir] = result;
-      editorFiles[dir] = editorState;
+      this.initial.files[dir] = result;
+      this.initial.editorFiles[dir] = editorState;
     }
 
-    console.log({ files, editorFiles });
+    console.log({ files: this.initial.files, editorFiles: this.initial.editorFiles });
 
-    setFiles(editorFiles);
-    
-    await webContainer.mount(files, { mountPoint: "/" });
+    setFiles(this.initial.editorFiles);
+  }
+
+  async mountWebContainer(webContainer: WebContainer) {
+    await webContainer.mount(this.initial.files, { mountPoint: "/" });
     console.log("mounted, watching paths...");
     webContainer.internal.watchPaths(
       { include: [`/home/workspace/**`], exclude: ["**/node_modules", ".git"], includeContent: true},
@@ -127,41 +132,50 @@ class ZenFileSystemHandler {
               zenFs.mkdirSync(sanitizedPath);
               
               // update editor state
-              let current = editorFiles;
+              let current = this.initial.editorFiles;
               const parts = sanitizedPath.split('/').filter(Boolean);
               for (let i = 0; i < parts.length - 1; i++) {
                 current = (current[parts[i]] as { directory: typeof current }).directory;
               }
               current[parts[parts.length - 1]] = { directory: {}, open: false };
               
-              useFileSystem.getState().setFiles(editorFiles);
+              useFileSystem.getState().setFiles(this.initial.editorFiles);
               break;
             }
             case "remove_dir": {
               // propagate to zenfs
               console.log(" -> removing", sanitizedPath);
               try {
-                zenFs.rmSync(sanitizedPath, { recursive: true, force: true }); // TODO: https://github.com/zen-fs/core/issues/99 ??
+                const recursiveRemove = async (path: string) => {
+                  const files = zenFs.readdirSync(path);
+                  if (files.length > 0) {
+                    for (const file of files) {
+                      await recursiveRemove(`${path}/${file}`);
+                    }
+                  }
+                  // check if path is valid
+                  if (zenFs.existsSync(path)) {
+                    await zenFs.promises.rm(path, { recursive: true });
+                  }
+                }
+                recursiveRemove(sanitizedPath).then(() => {
+                  console.log(" -> removed", sanitizedPath);
+                }).catch((error) => {
+                  console.log(" -> error removing", sanitizedPath, error);
+                });
               } catch (error) {
                 console.log(" -> error removing", sanitizedPath, error);
               }
-              // it works.. but it doesn't remove the base directory, so we do it again
-              try {
-                zenFs.rmdirSync(sanitizedPath);
-              } catch (error) {
-                console.log(" -> error removing (kind of expected)", sanitizedPath, error); // WHAT THE FUCKK
-              }
-              console.log(" -> removed", sanitizedPath);
               
               // update editor state
-              let current = editorFiles;
+              let current = this.initial.editorFiles;
               const parts = sanitizedPath.split('/').filter(Boolean);
               for (let i = 0; i < parts.length - 1; i++) {
                 current = (current[parts[i]] as { directory: typeof current }).directory;
               }
               delete current[parts[parts.length - 1]];
           
-              useFileSystem.getState().setFiles(editorFiles);
+              useFileSystem.getState().setFiles(this.initial.editorFiles);
               break;
             }
             case "add_file":
@@ -175,7 +189,7 @@ class ZenFileSystemHandler {
               zenFs.writeFileSync(sanitizedPath, buffer);
               // update editor state
 
-              let current = editorFiles;
+              let current = this.initial.editorFiles;
               const parts = sanitizedPath.split('/').filter(Boolean);
               for (let i = 0; i < parts.length - 1; i++) {
                 current = (current[parts[i]] as { directory: typeof current }).directory;
@@ -187,7 +201,7 @@ class ZenFileSystemHandler {
                 }
               };
 
-              useFileSystem.getState().setFiles(editorFiles);
+              useFileSystem.getState().setFiles(this.initial.editorFiles);
               break;
             }
             case "remove_file": {
@@ -195,14 +209,14 @@ class ZenFileSystemHandler {
               
               zenFs.unlinkSync(sanitizedPath);
               
-              let current = editorFiles;
+              let current = this.initial.editorFiles;
               const parts = sanitizedPath.split('/').filter(Boolean);
               for (let i = 0; i < parts.length - 1; i++) {
                 current = (current[parts[i]] as { directory: typeof current }).directory;
               }
               delete current[parts[parts.length - 1]];
               // update editor state
-              useFileSystem.getState().setFiles(editorFiles);
+              useFileSystem.getState().setFiles(this.initial.editorFiles);
               break;
             }
             case "update_directory": {
