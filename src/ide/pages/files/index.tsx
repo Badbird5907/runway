@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, File, FileSymlink } from 'lucide-react';
 import { FSNode } from "@/filesystem";
 import { FSDirectory, useFileSystem } from "@/filesystem";
@@ -11,8 +11,8 @@ interface FileTreeNodeProps {
 }
 
 
-const sortedEntries = (files: Record<string, FSNode>) => {
-  return Object.entries(files).sort((a, b) => {
+const sortedEntries = (files: FSDirectory) => {
+  return Object.entries(files.directory).sort((a, b) => {
     const aIsDirectory = 'directory' in a[1];
     const bIsDirectory = 'directory' in b[1];
     if (aIsDirectory !== bIsDirectory) { // prioritize directories
@@ -26,6 +26,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
   const { setFiles, files } = useFileSystem();
 
   const toggleOpen = () => {
+    console.log(" -> node", node)
     if ('directory' in node) {
       setIsOpen(!isOpen);
       console.log("toggle", fullPath);
@@ -33,12 +34,12 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
       const parts = fullPath.split('/').filter(Boolean);
       for (let i = 0; i < parts.length; i++) {
         if (i === parts.length - 1) {
-          current[parts[i]] = {
-            ...current[parts[i]],
+          current.directory[parts[i]] = {
+            ...current.directory[parts[i]],
             open: !isOpen,
           };
         } else {
-          current = (current[parts[i]] as { directory: typeof current }).directory;
+          current = current.directory[parts[i]] as FSDirectory;
         }
       }
       setFiles({ ...files });
@@ -59,7 +60,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
   //   return <span className="w-4" />;
   // };
 
-  const sorted = useMemo(() => isOpen && "directory" in node ? sortedEntries(node.directory) : [], [node, isOpen]);
+  const sorted = "directory" in node ? sortedEntries(node) : [];
 
   return (
     <div className="group/tree relative">
@@ -94,7 +95,8 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
 
 export const FilesPage = () => {
   const { files } = useFileSystem();
-  const sorted = useMemo(() => sortedEntries(files), [files]);
+  const sorted = sortedEntries(files);
+  
   return (
     <div className="group bg-sidebar p-2 font-mono text-sm h-full overflow-auto">
       <h2 className="font-semibold mb-2">EXPLORER</h2>

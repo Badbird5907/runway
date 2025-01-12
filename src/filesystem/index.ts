@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
 
 // example data structure
 // const files = {
@@ -49,13 +50,16 @@ export type FSSymlink = {
 export type FSNode = FSFile | FSDirectory | FSSymlink;
 
 type FileSystemState = {
-  files: {
-    [key: string]: FSNode;
-  };
-  setFiles: (files: { [key: string]: FSNode }) => void;
+  files: FSDirectory;
+  setFiles: (files: FSDirectory) => void;
 }
 
-export const useFileSystem = create<FileSystemState>()((set) => ({
-  files: {},
-  setFiles: (files) => set({ files }),
-}))
+export const useFileSystem = create<FileSystemState>()(
+  immer((set) => ({
+    files: {
+      directory: {},
+      open: true,
+    },
+    setFiles: (files) => set({ files }),
+  }))
+)
