@@ -1,4 +1,5 @@
 import { FSDirectory, FSNode, useFileSystem } from "@/filesystem";
+import { useEditorState } from "@/ide/editor";
 import { bufferWatchEvents } from "@/lib/utils/buffer";
 import { getEncoding } from "@/lib/utils/istextorbinary";
 import { DirectoryNode, FileNode, FileSystemTree, SymlinkNode, WebContainer } from "@webcontainer/api";
@@ -224,6 +225,7 @@ class ZenFileSystemHandler {
               }
               delete current.directory[parts[parts.length - 1]];
               useFileSystem.getState().setFiles(editorFiles);
+              useEditorState.getState().removeTabWithPath(sanitizedPath);
               break;
             }
             case "update_directory": {
@@ -233,6 +235,34 @@ class ZenFileSystemHandler {
         }
       })
     )
+  }
+
+  getEditableFileContent(path: string) {
+    const exists = zenFs.existsSync(path)
+    if (!exists) {
+      console.log("not exists", path);
+      return false;
+    }
+    const stats = zenFs.statSync(path);
+    if (!stats.isFile()) {
+      console.log("not file", path);
+      return false;
+    }
+    // check if file is binary
+    const file = zenFs.readFileSync(path);
+    if (!isBinaryFile(file)) {
+      console.log("woo!!", path);
+      // if the file is empty, return an empty string
+      if (file.byteLength === 0) {
+        return "";
+      }
+      return file.toString('utf-8');
+    }
+    console.log("not editable", path);
+    return null;
+  }
+  writeFileSync(path: string, content: string) {
+    zenFs.writeFileSync(path, content);
   }
 }
 export const fileSystem = new ZenFileSystemHandler();

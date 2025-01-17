@@ -3,6 +3,8 @@ import { ChevronRight, ChevronDown } from 'lucide-react';
 import { FSNode } from "@/filesystem";
 import { FSDirectory, useFileSystem } from "@/filesystem";
 import { FileIcon } from '@/components/file-icon';
+import { fileSystem } from '@/filesystem/zen-fs';
+import { addOpenFile } from '@/ide/editor';
 interface FileTreeNodeProps {
   name: string;
   node: FSNode;
@@ -25,7 +27,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
   const [isOpen, setIsOpen] = useState((node as FSDirectory).open || false);
   const { setFiles, files } = useFileSystem();
 
-  const toggleOpen = () => {
+  const click = () => {
     console.log(" -> node", node)
     if ('directory' in node) {
       setIsOpen(!isOpen);
@@ -43,6 +45,19 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
         }
       }
       setFiles({ ...files });
+    } else if ('symlink' in node) {
+      const target = node.symlink.target;
+      const targetPath = `${fullPath}/${target}`; // TODO: make sure this works
+      const targetFile = fileSystem.getEditableFileContent(targetPath);
+      if (targetFile) {
+        addOpenFile(targetPath);
+      }
+    } else if ('file' in node) {
+      if (!node.file.isBinary) {
+        addOpenFile(fullPath);
+      } else {
+        console.log(" -> binary file", fullPath);
+      }
     }
   };
 
@@ -72,7 +87,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
         style={{
           paddingLeft: `${level * 8 + 12}px`,
         }}
-        onClick={toggleOpen}
+        onClick={click}
       >
         {getChevron()}
         {getIcon()}

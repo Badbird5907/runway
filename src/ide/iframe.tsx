@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 
 export const IFrame = () => {
+  console.log('IFrame');
   
   const { webContainer, addListener, removeListener } = useWebContainer();
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
@@ -22,7 +23,11 @@ export const IFrame = () => {
   }
   return (
     <>
-      {iframeSrc && <iframe src={iframeSrc} />}
+      {iframeSrc ? <iframe src={iframeSrc} /> : (
+        <div>
+          <h1>No dev server detected yet</h1>
+        </div>
+      )}
     </>
   )
 }
