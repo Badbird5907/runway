@@ -46,8 +46,8 @@ const XTermConsole = () => {
   const fitAddon = useRef<FitAddon>(new FitAddon());
   const { status, shellProcess, addListener, removeListener } = useWebContainer();
   useEffect(() => {
-    term.current.write(`[WebContainer] ${status}\n`);
-  }, [status])
+    term.current.write('\x1b[34m[WebContainer]\x1b[0m ' + status + '\n');
+  }, [status]);
 
   const resize = () => {
     fitAddon.current.fit();

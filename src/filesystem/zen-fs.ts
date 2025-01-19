@@ -1,3 +1,4 @@
+import { getWebContainer } from "@/components/container";
 import { FSDirectory, FSNode, useFileSystem } from "@/filesystem";
 import { useEditorState } from "@/ide/editor";
 import { bufferWatchEvents } from "@/lib/utils/buffer";
@@ -237,7 +238,18 @@ class ZenFileSystemHandler {
     )
   }
 
-  getEditableFileContent(path: string) {
+  canOpenFile(path: string, allowBinary: boolean = false) {
+    const exists = zenFs.existsSync(path)
+    if (!exists) {
+      return false;
+    }
+    const file = zenFs.readFileSync(path);
+    if (!allowBinary && isBinaryFile(file)) {
+      return false;
+    }
+    return true;
+  }
+  getEditableFileContent(path: string, force: boolean = false) {
     const exists = zenFs.existsSync(path)
     if (!exists) {
       console.log("not exists", path);
@@ -250,7 +262,7 @@ class ZenFileSystemHandler {
     }
     // check if file is binary
     const file = zenFs.readFileSync(path);
-    if (!isBinaryFile(file)) {
+    if (force || !isBinaryFile(file)) {
       console.log("woo!!", path);
       // if the file is empty, return an empty string
       if (file.byteLength === 0) {
@@ -261,8 +273,19 @@ class ZenFileSystemHandler {
     console.log("not editable", path);
     return null;
   }
-  writeFileSync(path: string, content: string) {
-    zenFs.writeFileSync(path, content);
+  async writeFileAsync(path: string, content: string) {
+    const container = getWebContainer();
+    if (!container || container.status !== 'ready') {
+      console.error(" -> container not ready, cannot write file", path);
+      return;
+    }
+    console.log(" -> writing file", path, content);
+    await Promise.all([
+      // sync to webcontainer
+      zenFs.writeFile(path, content),
+      // sync to zenfs
+      container.webContainer?.fs.writeFile(path, content)
+    ]);
   }
 }
 export const fileSystem = new ZenFileSystemHandler();

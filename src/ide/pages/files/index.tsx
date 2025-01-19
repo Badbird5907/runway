@@ -5,6 +5,8 @@ import { FSDirectory, useFileSystem } from "@/filesystem";
 import { FileIcon } from '@/components/file-icon';
 import { fileSystem } from '@/filesystem/zen-fs';
 import { addOpenFile } from '@/ide/editor';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 interface FileTreeNodeProps {
   name: string;
   node: FSNode;
@@ -48,14 +50,35 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
     } else if ('symlink' in node) {
       const target = node.symlink.target;
       const targetPath = `${fullPath}/${target}`; // TODO: make sure this works
-      const targetFile = fileSystem.getEditableFileContent(targetPath);
-      if (targetFile) {
+      if (fileSystem.canOpenFile(targetPath)) {
         addOpenFile(targetPath);
       }
     } else if ('file' in node) {
       if (!node.file.isBinary) {
         addOpenFile(fullPath);
       } else {
+        toast.error(
+          <>
+            <span className="font-mono">
+              This file is a binary file. Are you sure you want to open it?
+            </span>
+            <Button
+              onClick={() => {
+                addOpenFile(fullPath, true);
+                toast.dismiss();
+              }}
+            >
+              Open
+            </Button>
+            <Button
+              onClick={() => {
+                toast.dismiss();
+              }}
+            >
+              Cancel
+            </Button>
+          </>
+        );
         console.log(" -> binary file", fullPath);
       }
     }

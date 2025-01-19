@@ -40,6 +40,13 @@ export const WebContainerContext = createContext<{
   removeListener: (event: keyof WebContainerEventMap, id: string) => void;
 } | null>(null);
 
+// Add a global instance holder
+let globalWebContainerInstance: {
+  webContainer: WebContainer | null;
+  status: WebContainerStatus;
+  addListener: <T extends keyof WebContainerEventMap>(event: T, callback: WebContainerEventMap[T]) => string;
+  removeListener: (event: keyof WebContainerEventMap, id: string) => void;
+} | null = null;
 
 export const WebContainerProvider = ({ children }: { children: React.ReactNode }) => {
   const [webContainer, setWebContainer] = useState<WebContainer | null>(null);
@@ -90,6 +97,14 @@ export const WebContainerProvider = ({ children }: { children: React.ReactNode }
               },
             })
           );
+
+          // Set the global instance
+          globalWebContainerInstance = {
+            webContainer: instance,
+            status: status.current,
+            addListener,
+            removeListener,
+          };
         });
       })
     }
@@ -136,6 +151,14 @@ export const useWebContainer = () => {
     ...context,
     listeners: context.listeners.current,
   };
+};
+
+// Add a new function to access the WebContainer from vanilla TS
+export const getWebContainer = () => {
+  if (!globalWebContainerInstance) {
+    throw new Error('WebContainer not initialized. Ensure WebContainerProvider is mounted.');
+  }
+  return globalWebContainerInstance;
 };
 
 

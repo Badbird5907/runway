@@ -2,13 +2,12 @@ import { useWebContainer } from "@/components/container";
 import { fileSystem } from "@/filesystem/zen-fs";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import Editor from '@monaco-editor/react';
-import { useTheme } from "next-themes";
 import { Tabs, TabsTrigger } from "@/components/ui/tabs";
-import { TabsContent, TabsList } from "@radix-ui/react-tabs";
+import { TabsList } from "@radix-ui/react-tabs";
+import { EditorTab } from "@/ide/editor/tab";
 
 type EditorState = {
-  windows: string[][]; // each window is an array of file paths (tabs)
+  windows: string[][];
   activeWindow: number | null;
 
   addWindow: (window: string[]) => void; // add a new window with the given tabs
@@ -21,48 +20,50 @@ type EditorState = {
 export const useEditorState = create<EditorState>()(
   // persist(
   immer((set) => ({
-    windows: [],
+    windows: [] as string[][],
     activeWindow: null,
 
     addWindow: (window: string[]) => {
-      set((state) => {
-        state.windows.push(window);
-        state.activeWindow = state.windows.length - 1;
-      });
+      return set((state) => ({ windows: [...state.windows, window] }));
     },
     setActiveWindow: (id: number) => {
-      set((state) => {
-        state.activeWindow = id;
-      });
+      return set(() => ({ activeWindow: id }));
     },
     removeTabWithPath: (path: string) => {
-      set((state) => {
-        state.windows = state.windows.filter((window) => !window.includes(path));
+      return set((state) => {
+        const windows = state.windows.filter((window) => !window.includes(path));
+        return { windows };
       });
     },
     addTabToWindow: (window: number, path: string) => {
-      set((state) => {
-        state.windows[window].push(path);
+      return set((state) => {
+        const windows = state.windows.map((w, i) => {
+          if (i === window) {
+            return [...w, path]
+          }
+          return w
+        });
+        return { windows };
       });
     },
     addTabToActiveWindow: (path: string) => {
-      set((state) => {
-        if (state.activeWindow === null) {
-          return {
-            windows: [...state.windows, [path]],
-            activeWindow: state.windows.length,
-          }
-        } else {
-          return {
-            windows: state.windows.map((window, i) => {
+      return set((state) => {
+          // if (state.activeWindow === null) {
+          //   state.windows.push([path]);
+          //   state.activeWindow = state.windows.length - 1;
+          // } else {
+          //   state.windows[state.activeWindow].push(path);
+          // }
+          if (state.activeWindow === null) {
+            return { windows: [...state.windows, [path]], activeWindow: state.windows.length - 1 };
+          } else {
+            return { windows: state.windows.map((w, i) => {
               if (i === state.activeWindow) {
-                return [...window, path];
+                return [...w, path];
               }
-              return window;
-            }),
-            activeWindow: state.activeWindow,
+              return w;
+            }), activeWindow: state.activeWindow };
           }
-        }
       });
     },
   })),
@@ -84,10 +85,9 @@ export const useEditorState = create<EditorState>()(
   // )
 )
 
-export const addOpenFile = (path: string) => {
+export const addOpenFile = (path: string, force: boolean = false) => {
   console.log("Opening file:", path);
-  const file = fileSystem.getEditableFileContent(path);
-  if (!file) {
+  if (!fileSystem.canOpenFile(path, force)) {
     console.error("[x] file is not editable:", path);
     return;
   }
@@ -99,7 +99,7 @@ export const addOpenFile = (path: string) => {
 export const IDEEditor = () => {
   const container = useWebContainer();
   const editorState = useEditorState();
-  const theme = useTheme();
+  
   // const activeWindow = useMemo(() => editorState.windows.find((window) => window.id === editorState.activeWindow), [editorState.windows, editorState.activeWindow]);
 
   if (!container || container.status !== 'ready') { // TODO: just "freeze" the editor until the container is ready
@@ -116,17 +116,7 @@ export const IDEEditor = () => {
               })}
             </TabsList>
             {w.map((tab) => {
-              return <TabsContent key={tab} value={tab}>
-                <Editor
-                  height="90vh"
-                  path={tab}
-                  defaultValue={fileSystem.getEditableFileContent(tab) || ""}
-                  theme={theme.theme === 'dark' ? 'vs-dark' : 'vs-light'}
-                  onChange={(value) => {
-                    fileSystem.writeFileSync(tab, value || '');
-                  }}
-                />
-              </TabsContent>
+              return <EditorTab key={tab} tab={tab} path={tab} />
             })}
           </Tabs>
         </div>

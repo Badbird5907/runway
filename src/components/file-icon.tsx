@@ -12,7 +12,5 @@ export const FileIcon = ({ node, name }: { node: FSNode, name: string }) => {
     return getIconForFile(name);
   }, [name, node]);
 
-  console.log(icon);
-
   return <Image src={`${baseUrl}${icon}`} alt={name} width={16} height={16} />;
 }
