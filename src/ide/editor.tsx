@@ -2,68 +2,107 @@ import { useWebContainer } from "@/components/container";
 import { fileSystem } from "@/filesystem/zen-fs";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { Tabs, TabsTrigger } from "@/components/ui/tabs";
-import { TabsList } from "@radix-ui/react-tabs";
+import * as TabsPrimitive from "@radix-ui/react-tabs"
+import { EditorTabContent } from "@/ide/editor/tab-content";
 import { EditorTab } from "@/ide/editor/tab";
 
+type EditorWindow = {
+  tabs: { path: string, content: string }[];
+  activeTab: number;
+}
+
 type EditorState = {
-  windows: string[][];
+  windows: EditorWindow[];
   activeWindow: number | null;
 
-  addWindow: (window: string[]) => void; // add a new window with the given tabs
-  setActiveWindow: (id: number) => void; // set the active window to the given index
-  removeTabWithPath: (path: string) => void; // remove the tab with the given path from all windows (file deleted)
-  addTabToWindow: (window: number, path: string) => void; // add the tab with the given path to the given window
-  addTabToActiveWindow: (path: string) => void; // add the tab with the given path to the active window
+  addWindow: (tabs: string[]) => void;
+  setActiveWindow: (id: number) => void;
+  removeTabWithPath: (path: string, window: number) => void;
+  addTabToWindow: (window: number, path: string) => void;
+  addTabToActiveWindow: (path: string) => void;
+  setActiveTab: (window: number, tab: number) => void;
 }
 
 export const useEditorState = create<EditorState>()(
   // persist(
   immer((set) => ({
-    windows: [] as string[][],
-    activeWindow: null,
+    windows: [] as EditorWindow[],
+    activeWindow: null as number | null,
 
-    addWindow: (window: string[]) => {
-      return set((state) => ({ windows: [...state.windows, window] }));
+    addWindow: (tabs: string[]) => {
+      set((state) => {
+        state.windows.push({
+          tabs: tabs.map(path => ({ path, content: '' })),
+          activeTab: 0
+        });
+      });
     },
     setActiveWindow: (id: number) => {
-      return set(() => ({ activeWindow: id }));
+      set((state) => {
+        state.activeWindow = id;
+      });
     },
-    removeTabWithPath: (path: string) => {
-      return set((state) => {
-        const windows = state.windows.filter((window) => !window.includes(path));
-        return { windows };
+    removeTabWithPath: (path: string, window: number) => {
+      set((state) => {
+        const updateWindow = (w: EditorWindow) => {
+          w.tabs = w.tabs.filter(tab => tab.path !== path);
+          if (w.tabs.length > 0 && w.activeTab >= w.tabs.length) {
+            w.activeTab = w.tabs.length - 1;
+          }
+        };
+
+        if (window === -1) { // all windows
+          console.log("removing tab", path, "from all windows");
+          state.windows.forEach(updateWindow);
+        } else {
+          const w = state.windows[window];
+          if (w) { // just this window
+            console.log("removing tab", path, "from window", window);
+            updateWindow(w);
+          }
+        }
+      });
+    },
+    setActiveTab: (window: number, tab: number) => {
+      set((state) => {
+        state.windows[window].activeTab = tab;
       });
     },
     addTabToWindow: (window: number, path: string) => {
-      return set((state) => {
-        const windows = state.windows.map((w, i) => {
-          if (i === window) {
-            return [...w, path]
+      set((state) => {
+        const w = state.windows[window];
+        if (w) {
+          const existingTabIndex = w.tabs.findIndex(tab => tab.path === path);
+          if (existingTabIndex >= 0) {
+            w.activeTab = existingTabIndex;
+          } else {
+            w.tabs.push({ path, content: '' });
           }
-          return w
-        });
-        return { windows };
+        }
       });
     },
     addTabToActiveWindow: (path: string) => {
-      return set((state) => {
-          // if (state.activeWindow === null) {
-          //   state.windows.push([path]);
-          //   state.activeWindow = state.windows.length - 1;
-          // } else {
-          //   state.windows[state.activeWindow].push(path);
-          // }
-          if (state.activeWindow === null) {
-            return { windows: [...state.windows, [path]], activeWindow: state.windows.length - 1 };
-          } else {
-            return { windows: state.windows.map((w, i) => {
-              if (i === state.activeWindow) {
-                return [...w, path];
-              }
-              return w;
-            }), activeWindow: state.activeWindow };
+      set((state) => {
+        if (state.activeWindow === null) {
+          state.windows.push({
+            tabs: [{ path, content: '' }],
+            activeTab: 0
+          });
+          state.activeWindow = state.windows.length - 1;
+        } else {
+          const w = state.windows[state.activeWindow];
+          if (w) {
+            const existingTabIndex = w.tabs.findIndex(tab => tab.path === path);
+            if (existingTabIndex >= 0) {
+              w.activeTab = existingTabIndex;
+              console.log("tab already exists, setting active tab to", existingTabIndex);
+            } else {
+              w.tabs.push({ path, content: '' });
+              w.activeTab = w.tabs.length - 1;
+              console.log("tab does not exist, adding it");
+            }
           }
+        }
       });
     },
   })),
@@ -99,7 +138,7 @@ export const addOpenFile = (path: string, force: boolean = false) => {
 export const IDEEditor = () => {
   const container = useWebContainer();
   const editorState = useEditorState();
-  
+
   // const activeWindow = useMemo(() => editorState.windows.find((window) => window.id === editorState.activeWindow), [editorState.windows, editorState.activeWindow]);
 
   if (!container || container.status !== 'ready') { // TODO: just "freeze" the editor until the container is ready
@@ -107,18 +146,20 @@ export const IDEEditor = () => {
   }
   return (
     <div>
-      {editorState.windows.map((w, i) => {
+      {editorState.windows.map((w, i) => { // TODO: this only works for one window atm
         return <div key={i}>
-          <Tabs defaultValue={w[0]} className="w-full">
-            <TabsList>
-              {w.map((tab) => {
-                return <TabsTrigger key={tab} value={tab}>{tab}</TabsTrigger>
+          <TabsPrimitive.Root value={w.activeTab + ""} onValueChange={(value) => editorState.setActiveTab(i, parseInt(value))} className="w-full">
+            <TabsPrimitive.List className="bg-sidebar flex flex-row">
+              {w.tabs.map((tab, j) => {
+                return (
+                  <EditorTab key={tab.path} path={tab.path} index={j} showFullPath={true} />
+                )
               })}
-            </TabsList>
-            {w.map((tab) => {
-              return <EditorTab key={tab} tab={tab} path={tab} />
+            </TabsPrimitive.List>
+            {w.tabs.map((tab, j) => {
+              return <EditorTabContent key={tab.path} tab={tab.path} path={tab.path} index={j} />
             })}
-          </Tabs>
+          </TabsPrimitive.Root>
         </div>
       })}
     </div>

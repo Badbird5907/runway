@@ -54,15 +54,18 @@ export default {
   				'5': 'hsl(var(--chart-5))'
   			},
   			sidebar: {
-  				DEFAULT: 'hsl(var(--sidebar-background))',
+  				DEFAULT: 'var(--sidebar-background)',
   				foreground: 'hsl(var(--sidebar-foreground))',
   				primary: 'hsl(var(--sidebar-primary))',
   				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-  				accent: 'hsl(var(--sidebar-accent))',
+  				accent: 'var(--sidebar-accent)',
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-  				border: 'hsl(var(--sidebar-border))',
+  				border: 'var(--sidebar-border)',
   				ring: 'hsl(var(--sidebar-ring))'
-  			}
+  			},
+				editor: {
+					background: 'var(--editor-background)'
+				}
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
