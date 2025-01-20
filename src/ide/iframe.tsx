@@ -21,8 +21,8 @@ export const IFrame = () => {
   }
   return (
     <>
-      {iframeSrc ? <iframe src={iframeSrc} /> : (
-        <div>
+      {iframeSrc ? <iframe src={iframeSrc} className="w-full h-full" /> : (
+        <div className="w-full h-full flex items-center justify-center">
           <h1>No dev server detected yet</h1>
         </div>
       )}

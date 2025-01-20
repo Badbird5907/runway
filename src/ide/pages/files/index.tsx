@@ -7,6 +7,7 @@ import { fileSystem } from '@/filesystem/zen-fs';
 import { addOpenFile } from '@/ide/editor';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 interface FileTreeNodeProps {
   name: string;
   node: FSNode;
@@ -99,11 +100,11 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
     <div className="group/tree relative">
       {level > 0 && (
         <div className="absolute w-px bg-transparent group-hover/tree:bg-[#606060] transition-colors z-10"
-             style={{ // this is the line
-               left: `${level * 8 + 4}px`,
-               top: 0,
-               bottom: 0,
-             }} />
+          style={{ // this is the line
+            left: `${level * 8 + 4}px`,
+            top: 0,
+            bottom: 0,
+          }} />
       )}
       <div
         className={`flex items-center py-1 px-2 hover:bg-[#2A2D2E] cursor-pointer relative`}
@@ -130,13 +131,15 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({ name, node, level, f
 export const FilesPage = () => {
   const { files } = useFileSystem();
   const sorted = sortedEntries(files);
-  
+
   return (
     <div className="group bg-sidebar p-2 font-mono text-sm h-full overflow-auto">
       <h2 className="font-semibold font-sans mb-2">EXPLORER</h2>
-      {sorted.map(([name, node]) => (
-        <FileTreeNode key={name} name={name} node={node} level={0} fullPath={"/" + name} />
-      ))}
+      <ScrollArea className="h-[93vh]">
+        {sorted.map(([name, node]) => (
+          <FileTreeNode key={name} name={name} node={node} level={0} fullPath={"/" + name} />
+        ))}
+      </ScrollArea>
     </div>
   );
 }

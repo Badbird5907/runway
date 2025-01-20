@@ -5,6 +5,7 @@ import { immer } from "zustand/middleware/immer";
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 import { EditorTabContent } from "@/ide/editor/tab-content";
 import { EditorTab } from "@/ide/editor/tab";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type EditorWindow = {
   tabs: { path: string, content: string }[];
@@ -150,11 +151,15 @@ export const IDEEditor = () => {
         return <div key={i}>
           <TabsPrimitive.Root value={w.activeTab + ""} onValueChange={(value) => editorState.setActiveTab(i, parseInt(value))} className="w-full">
             <TabsPrimitive.List className="bg-sidebar flex flex-row">
-              {w.tabs.map((tab, j) => {
-                return (
-                  <EditorTab key={tab.path} path={tab.path} index={j} showFullPath={true} />
-                )
-              })}
+              <ScrollArea className="w-full">
+                <div className="flex flex-row">
+                  {w.tabs.map((tab, j) => {
+                    return (
+                      <EditorTab key={tab.path} path={tab.path} index={j} showFullPath={true} />
+                    )
+                  })}
+                </div>
+              </ScrollArea>
             </TabsPrimitive.List>
             {w.tabs.map((tab, j) => {
               return <EditorTabContent key={tab.path} tab={tab.path} path={tab.path} index={j} />
