@@ -4,7 +4,8 @@ import { useEditorState } from "@/ide/editor";
 import { bufferWatchEvents } from "@/lib/utils/buffer";
 import { getEncoding } from "@/lib/utils/istextorbinary";
 import { DirectoryNode, FileNode, FileSystemTree, SymlinkNode, WebContainer } from "@webcontainer/api";
-import { configure, fs as zenFs } from "@zenfs/core";
+import { configure } from "@zenfs/core";
+import zenFs from "@zenfs/core";
 import { IndexedDB } from '@zenfs/dom';
 
 // const utf8TextDecoder = new TextDecoder('utf8', { fatal: true });
