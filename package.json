@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack -p 7581",
-    "build": "node link.js && next build",
-    "link": "node link.js",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
