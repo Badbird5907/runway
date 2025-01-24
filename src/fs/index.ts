@@ -4,8 +4,9 @@ import { DisposableStore } from "vscode/vscode/vs/base/common/lifecycle";
 import { URI } from "vscode/vscode/vs/base/common/uri";
 import { Uri } from "monaco-editor";
 import { DirectoryNode, FileNode, FileSystemTree, SymlinkNode } from "@webcontainer/api";
+import { ZenFSProvider } from "@/fs/zen-fs";
 
-export let fs: IndexedDBFileSystemProvider | InMemoryFileSystemProvider | undefined = undefined;
+export let fs: IndexedDBFileSystemProvider | InMemoryFileSystemProvider | ZenFSProvider | undefined = undefined;
 export const initFs = async () => {
   const disposables = new DisposableStore();
   // IndexedDB is used for logging and user data
@@ -22,10 +23,11 @@ export const initFs = async () => {
   }
   const logsPath = URI.file(toLocalISOString(new Date()).replace(/-|:|\.\d+Z$/g, '')).with({ scheme: 'vscode-log' });
 
-  let loggerFs: IndexedDBFileSystemProvider | InMemoryFileSystemProvider;
+  let loggerFs: IndexedDBFileSystemProvider | InMemoryFileSystemProvider | ZenFSProvider;
   // User data
   if (indexedDB) {
-    fs = new IndexedDBFileSystemProvider("vscode-userdata", indexedDB, userDataStore, true);
+    // fs = new IndexedDBFileSystemProvider("vscode-userdata", indexedDB, userDataStore, true);
+    fs = new ZenFSProvider();
     loggerFs = new IndexedDBFileSystemProvider(logsPath.scheme, indexedDB, logsStore, true);
   } else {
     fs = new InMemoryFileSystemProvider();
@@ -44,16 +46,26 @@ export const initFs = async () => {
   registerCustomProvider("tmp", new InMemoryFileSystemProvider());
 
   const uri = Uri.file("/workspace")
-  const workspace = await fs.readdir(uri)
+  let workspace: [string, FileType][] = []
+  try {
+    const stats = await fs.stat(uri)
+    if (stats.type === FileType.Directory) {
+      workspace = await fs.readdir(uri)
+    }
+  } catch (e) {
+    // Directory doesn't exist yet
+  }
+  
   console.log("workspace", workspace)
   if (!workspace.length) {
-    fs.mkdir(uri)
-    fs.writeFile(Uri.file("/workspace/hello.txt"), encode("Welcome to Runway!"), { create: true, overwrite: true, unlock: true, atomic: false })
-    fs.writeFile(Uri.file("/workspace/test.js"), encode("console.log('Hello, world!');"), { create: true, overwrite: true, unlock: true, atomic: false })
+    await fs.mkdir(uri)
+    await fs.writeFile(Uri.file("/workspace/hello.txt"), encode("Welcome to Runway!"), { create: true, overwrite: true, unlock: true, atomic: false })
+    await fs.writeFile(Uri.file("/workspace/test.js"), encode("console.log('Hello, world!');"), { create: true, overwrite: true, unlock: true, atomic: false })
     console.log("opened")
     // call vscode.openFolder
   }
 }
+
 
 
 // example
