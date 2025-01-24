@@ -1,5 +1,5 @@
 {
-    "workbench.colorTheme": "Default Dark+",
+    "workbench.colorTheme": "Default Dark Modern",
     "workbench.iconTheme": "vs-seti",
     "editor.autoClosingBrackets": "languageDefined",
     "editor.autoClosingQuotes": "languageDefined",
@@ -11,13 +11,7 @@
     "editor.semanticHighlighting.enabled": true,
     "editor.bracketPairColorization.enabled": false,
     "editor.fontSize": 12,
-    "accessibility.signals.lineHasError": {
-        "sound": "on"
-    },
-    "accessibility.signals.onDebugBreak": {
-        "sound": "on"
-    },
-    "files.autoSave": "off",
+    "files.autoSave": "afterDelay",
     "debug.toolBarLocation": "docked",
     "editor.experimental.asyncTokenization": true,
     "terminal.integrated.tabs.title": "${sequence}",

@@ -1,7 +1,11 @@
 import { defineConfig } from 'vite'
 import importMetaUrlPlugin from '@codingame/esbuild-import-meta-url-plugin'
+import tsconfigPaths from 'vite-tsconfig-paths'
 import * as fs from 'fs'
 import path from 'path'
+import dynamicImport from 'vite-plugin-dynamic-import'
+import vsixPlugin from '@codingame/monaco-vscode-rollup-vsix-plugin'
+
 const pkg = JSON.parse(
   fs.readFileSync(new URL('./package.json', import.meta.url)).toString()
 )
@@ -57,7 +61,10 @@ export default defineConfig({
           })
         }
       }
-    }
+    },
+    tsconfigPaths(),
+    dynamicImport(),
+    vsixPlugin()
   ],
   esbuild: {
     minifySyntax: false

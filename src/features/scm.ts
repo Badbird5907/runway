@@ -1,7 +1,9 @@
 import type { Uri } from 'vscode'
 import { ExtensionHostKind, registerExtension } from 'vscode/extensions'
-import { remoteAuthority } from '../setup.common'
+import { remoteAuthority } from '@/setup/vs'
 
+
+// TODO: implement scm
 if (remoteAuthority == null) {
   const { getApi } = registerExtension(
     {

@@ -1,6 +1,6 @@
 import { ExtensionHostKind, registerExtension } from 'vscode/extensions'
 import * as monaco from 'monaco-editor'
-import { useHtmlFileSystemProvider } from '../setup.common'
+import { useHtmlFileSystemProvider } from '@/setup/vs'
 
 if (!useHtmlFileSystemProvider) {
   const { getApi } = registerExtension(

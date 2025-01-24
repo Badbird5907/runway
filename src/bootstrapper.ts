@@ -1,3 +1,5 @@
+import './style.css'
+
 const searchParams = new URLSearchParams(window.location.search)
 const locale = searchParams.get('locale')
 
@@ -55,12 +57,13 @@ if (locale != null) {
   }
 }
 
-const mode = searchParams.get('mode')
+import "@/setup/extensions"; // register extensions
+import { remoteAuthority } from './setup/vs' // we need to import vs nonetheless to initialize the editor
+import './setup/workbench'
+import './main'
 
-if (mode === 'full-workbench') {
-  void import('./main.workbench')
-} else {
-  void import('./main.views')
+if (remoteAuthority != null) {
+  void import('./features/remoteExtension')
 }
 
 export {}

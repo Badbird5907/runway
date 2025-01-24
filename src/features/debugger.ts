@@ -68,7 +68,7 @@ void getApi().then(async (debuggerVscodeApi) => {
       await new Promise((resolve, reject) => {
         websocket.onopen = resolve
         websocket.onerror = () =>
-          reject(new Error('Unable to connect to debugger server. Run `npm run start:debugServer`'))
+          reject(new Error('Unable to connect to debugger server.'))
       })
 
       websocket.send(
@@ -84,6 +84,7 @@ void getApi().then(async (debuggerVscodeApi) => {
         })
       )
 
+      
       const adapter = new WebsocketDebugAdapter(websocket)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
