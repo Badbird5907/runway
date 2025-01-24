@@ -1,8 +1,9 @@
-import { IndexedDB, IndexedDBFileSystemProvider, InMemoryFileSystemProvider, registerCustomProvider, registerFileSystemOverlay } from "@codingame/monaco-vscode-files-service-override";
+import { FileType, IndexedDB, IndexedDBFileSystemProvider, InMemoryFileSystemProvider, registerCustomProvider, registerFileSystemOverlay } from "@codingame/monaco-vscode-files-service-override";
 import { encode, toDisposable, toLocalISOString } from "@/util";
 import { DisposableStore } from "vscode/vscode/vs/base/common/lifecycle";
 import { URI } from "vscode/vscode/vs/base/common/uri";
 import { Uri } from "monaco-editor";
+import { DirectoryNode, FileNode, FileSystemTree, SymlinkNode } from "@webcontainer/api";
 
 export let fs: IndexedDBFileSystemProvider | InMemoryFileSystemProvider | undefined = undefined;
 export const initFs = async () => {
@@ -53,3 +54,57 @@ export const initFs = async () => {
     // call vscode.openFolder
   }
 }
+
+
+// example
+const example = {
+  // This is a directory - provide its name as a key
+  src: {
+    // Because it's a directory, add the "directory" key
+    directory: {
+      // This is a file - provide its path as a key:
+      'main.js': {
+        // Because it's a file, add the "file" key
+        file: {
+          contents: `
+            console.log('Hello from WebContainers!')
+          `,
+        },
+      },
+      // This is another file inside the same folder
+      'main.css': {
+        // Because it's a file, add the "file" key
+        file: {
+          contents: `
+            body {
+              margin: 0;
+            }
+          `,
+        },
+      },
+    },
+  },
+  // This is a file outside the folder
+  'package.json': {
+    /* Omitted for brevity */
+  },
+  // This is another file outside the folder
+  'index.html': {
+    /* Omitted for brevity */
+  },
+};
+/*export const buildFileTree = async (): Promise<FileSystemTree> => {
+  if (!fs) {
+    throw new Error("FS is not initialized!!");
+  }
+  const buildTree = async (path: string): Promise<DirectoryNode | FileNode | SymlinkNode> => {
+    const stats = await fs!.stat(URI.file(path));
+    if (stats.type & FileType.SymbolicLink) { // type can be a bitmask
+      const symlink = stats.name
+      SymlinkSupport
+    }
+  }
+}
+export const mountWebContainer = () => {
+  
+}*/

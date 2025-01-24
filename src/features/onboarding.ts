@@ -1,6 +1,5 @@
 import { fs } from "@/fs";
-import { encode } from "@/util";
-import { commands, Uri } from "vscode";
+import { Uri } from "vscode";
 import { ExtensionHostKind } from "vscode/extensions";
 
 import { registerExtension } from "vscode/extensions";

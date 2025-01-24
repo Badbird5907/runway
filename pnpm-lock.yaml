@@ -530,6 +530,9 @@ importers:
       '@codingame/monaco-vscode-yaml-default-extension':
         specifier: ^11.1.2
         version: 11.1.2
+      '@webcontainer/api':
+        specifier: 1.5.1-internal.6
+        version: 1.5.1-internal.6
       ansi-colors:
         specifier: ^4.1.3
         version: 4.1.3
@@ -1553,6 +1556,9 @@ packages:
   '@vscode/vscode-languagedetection@1.0.21':
     resolution: {integrity: sha512-zSUH9HYCw5qsCtd7b31yqkpaCU6jhtkKLkvOOA8yTrIRfBSOFb8PPhgmMicD7B/m+t4PwOJXzU1XDtrM9Fd3/g==}
     hasBin: true
+
+  '@webcontainer/api@1.5.1-internal.6':
+    resolution: {integrity: sha512-HErRz351Wa2porp9AZAeKqzwyl9UIuj09hQyKLLzDdT+p/VOKyCeWghV0wBhuzJA1K4gExvyCzblnOPaJq0trg==}
 
   '@xterm/addon-clipboard@0.2.0-beta.79':
     resolution: {integrity: sha512-zpwf43fzBG01fA8E75JQ/jsm/85bHCtFMOcURNAEbCoj0RSpZaq4rE5cPoy49IhYnctPZdYNxEU/+PzgtsSQ6Q==}
@@ -2949,6 +2955,8 @@ snapshots:
   '@vscode/tree-sitter-wasm@0.0.4': {}
 
   '@vscode/vscode-languagedetection@1.0.21': {}
+
+  '@webcontainer/api@1.5.1-internal.6': {}
 
   '@xterm/addon-clipboard@0.2.0-beta.79(@xterm/xterm@5.6.0-beta.96)':
     dependencies:

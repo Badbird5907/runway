@@ -37,6 +37,8 @@ export const workspaceFile = monaco.Uri.file('/workspace')
 
 await initFs();
 
+import "../webcontainer"
+
 // Workers
 export type WorkerLoader = () => Worker
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
