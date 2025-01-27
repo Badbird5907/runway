@@ -1,9 +1,11 @@
-import { FileSystemProviderCapabilities, FileSystemProviderError, FileSystemProviderErrorCode, FileType, IFileChange, IFileDeleteOptions, IFileOverwriteOptions, IFileSystemProviderWithFileReadWriteCapability, IFileWriteOptions, IStat, IWatchOptions } from "@codingame/monaco-vscode-files-service-override";
+import { FileChangeType, FileSystemProviderCapabilities, FileSystemProviderError, FileSystemProviderErrorCode, FileType, IFileChange, IFileDeleteOptions, IFileOverwriteOptions, IFileSystemProviderWithFileReadWriteCapability, IFileWriteOptions, IStat, IWatchOptions } from "@codingame/monaco-vscode-files-service-override";
 import { Disposable, IDisposable } from "vscode/vscode/vs/base/common/lifecycle";
 import { configure, ErrnoError, fs } from "@zenfs/core";
 import { IndexedDB } from "@zenfs/dom"
-import { Event } from "vscode/vscode/vs/base/common/event";
+import { Emitter, Event } from "vscode/vscode/vs/base/common/event";
 import { URI } from "vscode/vscode/vs/base/common/uri";
+import { DirectoryNode, FileNode, FileSystemTree, SymlinkNode } from "@webcontainer/api";
+import { getWebContainer, isWebContainerBooted } from "@/webcontainer";
 
 await configure({
   mounts: {
@@ -15,8 +17,9 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
     FileSystemProviderCapabilities.FileReadWrite | 
     FileSystemProviderCapabilities.FileOpenReadWriteClose;
   
-  onDidChangeCapabilities = Event.None;
-  onDidChangeFile = Event.None;
+  onDidChangeCapabilities = Event.None
+  _onDidChangeFile = new Emitter<readonly IFileChange[]>()
+  onDidChangeFile = this._onDidChangeFile.event
   
   async readFile(resource: URI): Promise<Uint8Array> {
     try {
@@ -26,9 +29,18 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
     }
   }
 
-  async writeFile(resource: URI, content: Uint8Array, opts: IFileWriteOptions): Promise<void> {
+  async writeFile(resource: URI, content: Uint8Array, opts: IFileWriteOptions & { webContainer?: boolean }): Promise<void> {
     try {
-      await fs.promises.writeFile(resource.path, content);
+      const promises = [fs.promises.writeFile(resource.path, content)];
+      if (!opts.webContainer && isWebContainerBooted()) { // this did not come from webcontainer, so we need to propagate to webcontainer
+        promises.push(getWebContainer().then((wc) => wc.fs.writeFile(resource.path, content)));
+      }
+      await Promise.all(promises);
+      this._fireSoon({ 
+        type: opts.create ? FileChangeType.ADDED : FileChangeType.UPDATED, 
+        resource 
+      });
+      
     } catch (e) {
       throw this.toFileSystemProviderError(e as ErrnoError);
     }
@@ -48,9 +60,19 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
     }
   }
 
-  async mkdir(resource: URI): Promise<void> {
+  async mkdir(resource: URI, opts?: { webContainer?: boolean; recursive?: boolean }): Promise<void> {
     try {
-      await fs.promises.mkdir(resource.path);
+      const promises = [
+        fs.promises.mkdir(resource.path, { recursive: opts?.recursive ?? false }),
+        ...(
+          opts?.webContainer && isWebContainerBooted() ? 
+          [
+            getWebContainer().then((wc) => wc.fs.mkdir(resource.path, { recursive: (opts?.recursive ?? false) as true }))
+          ] : []
+        )
+      ];
+      await Promise.all(promises);
+      this._fireSoon({ type: FileChangeType.ADDED, resource });
     } catch (e) {
       throw this.toFileSystemProviderError(e as ErrnoError);
     }
@@ -97,6 +119,7 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
         }).catch((error) => {
           console.log(" -> error removing", resource.path, error);
         });
+        this._fireSoon({ type: FileChangeType.DELETED, resource });
       } catch (error) {
         console.log(" -> error removing", resource.path, error);
       }
@@ -107,12 +130,14 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
       } else {
         await fs.promises.unlink(resource.path);
       }
+      this._fireSoon({ type: FileChangeType.DELETED, resource });
     }
   }
 
   async rename(from: URI, to: URI): Promise<void> {
     try {
       await fs.promises.rename(from.path, to.path);
+      this._fireSoon({ type: FileChangeType.UPDATED, resource: to });
     } catch (e) {
       throw this.toFileSystemProviderError(e as ErrnoError);
     }
@@ -152,4 +177,84 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
 
 		return FileSystemProviderError.create(resultError, code);
 	}
+  private _bufferedChanges: IFileChange[] = []
+  private _fireSoonHandle?: number
+  private _fireSoon(...changes: IFileChange[]): void {
+    this._bufferedChanges.push(...changes)
+
+    if (this._fireSoonHandle != null) {
+      clearTimeout(this._fireSoonHandle)
+      this._fireSoonHandle = undefined
+    }
+
+    this._fireSoonHandle = window.setTimeout(() => {
+      this._onDidChangeFile.fire(this._bufferedChanges)
+      this._bufferedChanges.length = 0
+    }, 5)
+  }
+}
+
+export const buildFileTree = async () => {
+  const buildTree = async (path: string): Promise<DirectoryNode | FileNode | SymlinkNode> => {
+    const stats = await fs.promises.stat(path);
+    
+    if (stats.isSymbolicLink()) {
+      const target = fs.readlinkSync(path).toString('utf-8');
+      return {
+        file: {
+          symlink: target
+        }
+      };
+    }
+      
+    if (stats.isFile()) {
+      const buff = await fs.promises.readFile(path);
+      return {
+        file: {
+            contents: buff
+        }
+      };
+    }
+      
+    if (stats.isDirectory()) {
+      const entries = await fs.promises.readdir(path);
+      const webContainerTree: FileSystemTree = {};
+      
+      const buildPromises = entries.map(async (entry) => {
+        const fullPath = path === '/' ? `/${entry}` : `${path}/${entry}`;
+        const result = await buildTree(fullPath);
+        return { entry, result };
+      });
+
+      const results = await Promise.all(buildPromises);
+      
+      for (const { entry, result } of results) {
+        webContainerTree[entry] = result;
+      }
+      
+      return {
+        directory: webContainerTree
+      };
+    }
+    
+    throw new Error(`Unsupported file type at path: ${path}`);
+  };
+
+  console.log("building file tree")
+
+  const dirs = await fs.promises.readdir("/home/workspace"); // TODO: implement projects by instead reading from /<project>/*
+  console.log(" -> ", dirs)
+  const buildPromises = dirs.map(async (dir) => {
+    const result = await buildTree(`/home/workspace/${dir}`);
+    return { dir, result };
+  });
+
+  const results = await Promise.all(buildPromises);
+  
+  const files: FileSystemTree = {};
+  for (const { dir, result } of results) {
+    files[dir] = result;
+  }
+
+  return files;
 }

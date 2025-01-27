@@ -17,10 +17,10 @@ const { getApi } = registerExtension(
 
 void getApi().then(async (vscode) => {
   if (!useHtmlFileSystemProvider) {
-    const mainModelUri = vscode.Uri.file('/workspace/test.js')
+    const mainModelUri = vscode.Uri.file('/home/workspace/test.js')
     await Promise.all([
       vscode.workspace.openTextDocument(mainModelUri),
-      vscode.workspace.openTextDocument(vscode.Uri.file('/workspace/test_readonly.js')) // open the file so vscode sees it's locked
+      vscode.workspace.openTextDocument(vscode.Uri.file('/home/workspace/test_readonly.js')) // open the file so vscode sees it's locked
     ])
   }
 })

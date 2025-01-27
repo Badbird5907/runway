@@ -33,7 +33,7 @@ params.delete('resetLayout')
 
 window.history.replaceState({}, document.title, url.href)
 
-export const workspaceFile = monaco.Uri.file('/workspace')
+export const workspaceFile = monaco.Uri.file('/home/workspace')
 
 await initFs();
 
@@ -105,12 +105,12 @@ export const constructOptions: IWorkbenchConstructionOptions = {
   workspaceProvider: {
     trusted: true,
     async open(workspace) {
-      window.open(window.location.href)
-      return true
+      // window.open(window.location.href)
+      return false
     },
     workspace: !remotePath
       ? {
-          folderUri: monaco.Uri.file('/workspace')
+          folderUri: workspaceFile
         }
       : {
           folderUri: monaco.Uri.from({
@@ -129,9 +129,6 @@ export const constructOptions: IWorkbenchConstructionOptions = {
   },
   defaultLayout: {
     editors: [
-      {
-        uri: monaco.Uri.file('/workspace/hello.txt'),
-      }
     ],
     layout: {
       editors: {

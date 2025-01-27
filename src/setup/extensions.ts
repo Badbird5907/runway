@@ -1,5 +1,4 @@
-import '@/features/onboarding'
-import '@/features/debugger'
+// import '@/features/debugger'
 import '@/features/search'
 import '@/features/terminal'
 
