@@ -61,9 +61,10 @@ export const getWebContainer = async (): Promise<WebContainer> => {
   return webContainerPromise;
 }
 
-export const bootWebContainer = async () => {
+const bootWebContainer = async () => {
   console.log("booting webcontainer")
   vscode.window.setStatusBarMessage("Booting WebContainer...", 10000);
+  eventBus.emit("container:booting");
   const wc = await WebContainer.boot({ workdirName: "workspace" }).then((wc) => {
     console.log("webcontainer booted");
     vscode.window.setStatusBarMessage("WebContainer booted", 10000);
@@ -77,7 +78,7 @@ export const bootWebContainer = async () => {
   });
   wc.on("server-ready", (port, url) => {
     devServerUrl = url;
-    eventBus.emit("container:booted", { port, url })
+    eventBus.emit("container:server-ready", { port, url })
   })
   const files = await buildFileTree();
   console.log(files);
@@ -86,6 +87,7 @@ export const bootWebContainer = async () => {
   console.log("mounted");
   webContainerBooted = true;
   beginWebContainerFSSync(wc);
+  eventBus.emit("container:booted", wc);
   return wc;
 }
 

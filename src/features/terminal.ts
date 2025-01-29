@@ -1,4 +1,4 @@
-import { bootWebContainer, getWebContainer } from '@/webcontainer'
+import { getWebContainer } from '@/webcontainer'
 import {
   ITerminalChildProcess,
   SimpleTerminalBackend,

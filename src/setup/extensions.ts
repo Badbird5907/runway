@@ -1,4 +1,5 @@
 // import '@/features/debugger'
+import '@/features/webcontainer'
 import '@/features/webview'
 import '@/features/search'
 import '@/features/terminal'

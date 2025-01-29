@@ -71,6 +71,9 @@ void getApi().then(async (vscode) => {
   vscode.commands.registerCommand("runway-webview.show", async () => {
     await provider.show()
   })
+  vscode.commands.registerCommand("runway-webview.reload", async () => {
+    await provider.reload();
+  })
 
   eventBus.on("*", (t) => {
     const type = t.toString();
@@ -92,7 +95,6 @@ class WebviewProvider implements vscode.WebviewViewProvider {
     webview.onDidReceiveMessage((message) => {
       console.log(message)
     })
-    
     // Load initial content when view is created
     return this.reload();
   }
@@ -118,11 +120,28 @@ class WebviewProvider implements vscode.WebviewViewProvider {
       this._view.webview.html = `
         <!DOCTYPE html>
         <html>
+          <head>
+            <style>
+              body, html {
+                margin: 0;
+                padding: 0;
+                height: 100vh;
+                width: 100vw;
+                overflow: hidden;
+              }
+              iframe {
+                border: none;
+                width: 100%;
+                height: 100%;
+              }
+            </style>
+          </head>
           <body>
-            <iframe src="${devServerUrl}" width="100%" height="100%"></iframe>
+            <iframe src="${devServerUrl}"></iframe>
           </body>
         </html>
       `
+    this._view?.show?.();
     } else {   
       this._view.webview.html = `
         <!DOCTYPE html>
