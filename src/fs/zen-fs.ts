@@ -31,9 +31,11 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
 
   async writeFile(resource: URI, content: Uint8Array, opts: IFileWriteOptions & { webContainer?: boolean }): Promise<void> {
     try {
+      console.log(" -> writeFile", resource.path, content)
       const promises = [fs.promises.writeFile(resource.path, content)];
-      if (!opts.webContainer && isWebContainerBooted()) { // this did not come from webcontainer, so we need to propagate to webcontainer
-        promises.push(getWebContainer().then((wc) => wc.fs.writeFile(resource.path, content)));
+      if (!opts.webContainer && isWebContainerBooted() && resource.path.startsWith("/home/workspace")) { // this did not come from webcontainer, so we need to propagate to webcontainer
+        const wcPath = resource.path.substring("/home/workspace".length)
+        promises.push(getWebContainer().then((wc) => wc.fs.writeFile(wcPath, content)));
       }
       await Promise.all(promises);
       this._fireSoon({ 
@@ -62,15 +64,13 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
 
   async mkdir(resource: URI, opts?: { webContainer?: boolean; recursive?: boolean }): Promise<void> {
     try {
-      const promises = [
-        fs.promises.mkdir(resource.path, { recursive: opts?.recursive ?? false }),
-        ...(
-          opts?.webContainer && isWebContainerBooted() ? 
-          [
-            getWebContainer().then((wc) => wc.fs.mkdir(resource.path, { recursive: (opts?.recursive ?? false) as true }))
-          ] : []
-        )
-      ];
+      const promises = [fs.promises.mkdir(resource.path, { recursive: opts?.recursive ?? false })];
+      if (!opts?.webContainer && isWebContainerBooted() && resource.path.startsWith("/home/workspace")) {
+        const wcPath = resource.path.substring("/home/workspace".length)
+        promises.push(getWebContainer().then((wc) => wc.fs.mkdir(wcPath, { 
+          recursive: (opts?.recursive ?? false) as true // FUCK YOU TYPESCRIPT I DO NOT CARE ABOUT THE RETURN TYPE JFC https://discord.com/channels/289587909051416579/555469074080202765/1333327174891077653 (PaperMC server)
+        })))
+      }
       await Promise.all(promises);
       this._fireSoon({ type: FileChangeType.ADDED, resource });
     } catch (e) {
@@ -97,13 +97,13 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
     }
   }
 
-  async delete(resource: URI, opts: IFileDeleteOptions): Promise<void> {
+  async delete(resource: URI, opts: IFileDeleteOptions & { webContainer?: boolean }): Promise<void> {
     if (opts.recursive) {
       try {
         const recursiveRemove = async (path: string) => { // odd zenfs quirk
-          const files = await fs.promises.readdir(path);
-          if (files.length > 0) {
-            for (const file of files) {
+          const entries = await fs.promises.readdir(path);
+          if (entries.length > 0) {
+            for (const file of entries) {
               await recursiveRemove(`${path}/${file}`).catch((e) => {
                 console.log(" -> [1] error removing", resource.path, e);
               });
@@ -114,29 +114,36 @@ export class ZenFSProvider extends Disposable implements IFileSystemProviderWith
             await fs.promises.rm(path, { recursive: true });
           }
         }
-        await recursiveRemove(resource.path).then(() => {
-          console.log(" -> removed", resource.path);
-        }).catch((error) => {
-          console.log(" -> error removing", resource.path, error);
-        });
+        const promises = [recursiveRemove(resource.path)];
+        if (!opts.webContainer && isWebContainerBooted() && resource.path.startsWith("/home/workspace")) {
+          const wcPath = resource.path.substring("/home/workspace".length)
+          promises.push(getWebContainer().then((wc) => wc.fs.rm(wcPath, { recursive: true, force: true })));
+        }
+        await Promise.all(promises);
         this._fireSoon({ type: FileChangeType.DELETED, resource });
       } catch (error) {
         console.log(" -> error removing", resource.path, error);
       }
     } else {
-      const stats = await fs.promises.stat(resource.path);
-      if (stats.isDirectory()) {
-        await fs.promises.rmdir(resource.path);
-      } else {
-        await fs.promises.unlink(resource.path);
+      const promises = [fs.promises.rm(resource.path)];
+      if (!opts.webContainer && isWebContainerBooted() && resource.path.startsWith("/home/workspace")) {
+        const wcPath = resource.path.substring("/home/workspace".length)
+        promises.push(getWebContainer().then((wc) => wc.fs.rm(wcPath, { force: true })));
       }
+      await Promise.all(promises);
       this._fireSoon({ type: FileChangeType.DELETED, resource });
     }
   }
 
-  async rename(from: URI, to: URI): Promise<void> {
+  async rename(from: URI, to: URI, opts?: IFileOverwriteOptions & { webContainer?: boolean }): Promise<void> {
     try {
-      await fs.promises.rename(from.path, to.path);
+      const promises = [fs.promises.rename(from.path, to.path)];
+      if (!opts?.webContainer && isWebContainerBooted() && from.path.startsWith("/home/workspace")) {
+        const wcFromPath = from.path.substring("/home/workspace".length)
+        const wcToPath = to.path.substring("/home/workspace".length)
+        promises.push(getWebContainer().then((wc) => wc.fs.rename(wcFromPath, wcToPath)));
+      }
+      await Promise.all(promises);
       this._fireSoon({ type: FileChangeType.UPDATED, resource: to });
     } catch (e) {
       throw this.toFileSystemProviderError(e as ErrnoError);

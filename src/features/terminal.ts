@@ -68,7 +68,6 @@ export class TerminalBackend extends SimpleTerminalBackend {
       }
 
       override clearBuffer(): void | Promise<void> {
-        this.process?.input.getWriter().close()
       }
 
       override updateProperty(): Promise<void> {

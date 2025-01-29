@@ -1,6 +1,8 @@
 // import '@/features/debugger'
+import '@/features/webview'
 import '@/features/search'
 import '@/features/terminal'
+import '@/features/multi-tab'
 
 import "../../extensions/open-collaboration-tools.vsix"
 

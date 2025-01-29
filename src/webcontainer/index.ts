@@ -4,6 +4,7 @@ import { WebContainer } from '@webcontainer/api';
 import { fs } from "@/fs"
 import * as vscode from 'vscode';
 import { URI } from 'vscode/vscode/vs/base/common/uri';
+import { eventBus } from '@/util/event-bus';
 
 type WebContainerState = {
   status: "booting" | "ready" | "error"
@@ -47,9 +48,10 @@ type WebContainerState = {
 // )
 
 let webContainerPromise: Promise<WebContainer> | null = null;
-
+let webContainerBooted = false;
+export let devServerUrl: string | null = null;
 export const isWebContainerBooted = () => {
-  return webContainerPromise !== null;
+  return webContainerPromise !== null && webContainerBooted;
 }
 
 export const getWebContainer = async (): Promise<WebContainer> => {
@@ -73,11 +75,16 @@ export const bootWebContainer = async () => {
     vscode.window.showErrorMessage("Failed to boot WebContainer!!")
     throw e;
   });
+  wc.on("server-ready", (port, url) => {
+    devServerUrl = url;
+    eventBus.emit("container:booted", { port, url })
+  })
   const files = await buildFileTree();
   console.log(files);
   console.log("webcontainer booted, mounting...");
   await wc.mount(files, { mountPoint: "/" });
   console.log("mounted");
+  webContainerBooted = true;
   beginWebContainerFSSync(wc);
   return wc;
 }
@@ -102,12 +109,12 @@ const beginWebContainerFSSync = (wc: WebContainer) => {
             // propagate to zenfs
             const path = URI.file(sanitizedPath);
             console.log("adding dir", path);
-            await fs?.mkdir(path);
+            await fs?.mkdir(path, { webContainer: true });
             break;
           }
           case "remove_dir": {
             // propagate to zenfs
-            await fs?.delete(URI.file(sanitizedPath), { recursive: true, useTrash: false, atomic: false })
+            await fs?.delete(URI.file(sanitizedPath), { recursive: true, useTrash: false, atomic: false, webContainer: true })
             break;
           }
           case "add_file":
@@ -123,7 +130,7 @@ const beginWebContainerFSSync = (wc: WebContainer) => {
           }
           case "remove_file": {
             console.log(` -> Removing ${sanitizedPath}`);
-            await fs?.delete(URI.file(sanitizedPath), { recursive: false, useTrash: false, atomic: false })
+            await fs?.delete(URI.file(sanitizedPath), { recursive: false, useTrash: false, atomic: false, webContainer: true })
             break;
           }
           case "update_directory": {

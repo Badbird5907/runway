@@ -104,7 +104,7 @@ export const constructOptions: IWorkbenchConstructionOptions = {
   },
   workspaceProvider: {
     trusted: true,
-    async open(workspace) {
+    async open() {
       // window.open(window.location.href)
       return false
     },
@@ -143,7 +143,7 @@ export const constructOptions: IWorkbenchConstructionOptions = {
         id: 'custom-view'
       }
     ],
-    force: resetLayout
+    force: resetLayout,
   },
   productConfiguration: {
     nameShort: 'runway-ide',
