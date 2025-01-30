@@ -24,10 +24,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: './index.html',
-        webcontainer: './react-loader.html'
+        webcontainer: './react.html'
       }
     }
   },
+
   worker: {
     format: 'es'
   },
