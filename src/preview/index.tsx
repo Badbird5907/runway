@@ -81,9 +81,14 @@ const beginPreview = (id: string) => {
   styleTag.textContent = styles;
   document.head.appendChild(styleTag);
 
-  // render the react component into the preview container
-  createRoot(document.getElementById("root")!).render(<WebContainerPreview previewId={id} />);
-}
+  // get the body tag and append <div id="preview-container">
+  const body = document.body;
+  const previewContainer = document.createElement("div");
+  previewContainer.id = "preview-container";
+  body.appendChild(previewContainer);
 
+  // render the react component into the preview container
+  createRoot(previewContainer).render(<WebContainerPreview previewId={id} />);
+}
 
 export default beginPreview
