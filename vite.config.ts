@@ -5,6 +5,8 @@ import * as fs from 'fs'
 import path from 'path'
 import dynamicImport from 'vite-plugin-dynamic-import'
 import vsixPlugin from '@codingame/monaco-vscode-rollup-vsix-plugin'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 const pkg = JSON.parse(
   fs.readFileSync(new URL('./package.json', import.meta.url)).toString()
@@ -64,7 +66,9 @@ export default defineConfig({
     },
     tsconfigPaths(),
     dynamicImport(),
-    vsixPlugin()
+    vsixPlugin(),
+    tailwindcss(),
+    react()
   ],
   esbuild: {
     minifySyntax: false

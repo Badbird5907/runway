@@ -65,7 +65,11 @@ const bootWebContainer = async () => {
   console.log("booting webcontainer")
   vscode.window.setStatusBarMessage("Booting WebContainer...", 10000);
   eventBus.emit("container:booting");
-  const wc = await WebContainer.boot({ workdirName: "workspace" }).then((wc) => {
+  const wc = await WebContainer.boot({
+    workdirName: "workspace",
+    coep: "credentialless",
+    forwardPreviewErrors: true
+  }).then((wc) => {
     console.log("webcontainer booted");
     vscode.window.setStatusBarMessage("WebContainer booted", 10000);
     return wc;
@@ -76,6 +80,7 @@ const bootWebContainer = async () => {
     vscode.window.showErrorMessage("Failed to boot WebContainer!!")
     throw e;
   });
+  
   wc.on("server-ready", (port, url) => {
     devServerUrl = url;
     eventBus.emit("container:server-ready", { port, url })

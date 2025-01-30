@@ -25,7 +25,7 @@ channel.onmessage = (event) => {
   if (event.data === "new_tab") {
     anotherTab = true;
     void getApi().then(async (vscode) => {
-      vscode.window.showErrorMessage("Detected a new tab has been opened. Please close this tab to ensure data is not lost.", { modal: true });
+      vscode.window.showErrorMessage("Another tab has been opened. Please close this tab to ensure data is not lost.", { modal: true });
     });
   }
 }

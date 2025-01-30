@@ -23,7 +23,8 @@
     "skipLibCheck": true,
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "jsx": "react-jsx"
   },
   "include": ["src", "vite.config.ts", "vite.netlify.config.ts"]
 }
