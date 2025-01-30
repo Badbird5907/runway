@@ -1,4 +1,4 @@
-import { FileChangeType, FileSystemProviderCapabilities, FileSystemProviderError, FileSystemProviderErrorCode, FileType, IFileChange, IFileDeleteOptions, IFileOverwriteOptions, IFileSystemProviderWithFileReadWriteCapability, IFileWriteOptions, IStat, IWatchOptions } from "@codingame/monaco-vscode-files-service-override";
+import { FileChangeType, FileSystemProviderCapabilities, FileSystemProviderError, FileSystemProviderErrorCode, FileType, IFileChange, IFileDeleteOptions, IFileOverwriteOptions, IFileSystemProviderWithFileReadWriteCapability, IFileWriteOptions, IStat } from "@codingame/monaco-vscode-files-service-override";
 import { Disposable, IDisposable } from "vscode/vscode/vs/base/common/lifecycle";
 import { configure, ErrnoError, fs } from "@zenfs/core";
 import { IndexedDB } from "@zenfs/dom"

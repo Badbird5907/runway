@@ -1,7 +1,6 @@
 import { initUserConfiguration } from '@codingame/monaco-vscode-configuration-service-override'
 import { initUserKeybindings } from '@codingame/monaco-vscode-keybindings-service-override'
 import * as monaco from 'monaco-editor'
-import * as vscode from 'vscode'
 import { IWorkbenchConstructionOptions, LogLevel, IEditorOverrideServices } from 'vscode/services'
 // import getScmServiceOverride from '@codingame/monaco-vscode-scm-service-override'
 import { EnvironmentOverride } from 'vscode/workbench'

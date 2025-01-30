@@ -6,7 +6,7 @@ import '@/features/terminal'
 import '@/features/multi-tab'
 
 import "../../extensions/open-collaboration-tools.vsix"
-import "../../extensions/simple-browser.vsix"
+// import "../../extensions/simple-browser.vsix"
 
 // import './features/scm'
 import '@codingame/monaco-vscode-clojure-default-extension'

@@ -57,7 +57,7 @@ if (locale != null) {
   }
 }
 
-import "@/setup/extensions"; // register extensions
+import "./setup/extensions"; // register extensions
 import { remoteAuthority } from './setup/vs' // we need to import vs nonetheless to initialize the editor
 import './setup/workbench'
 

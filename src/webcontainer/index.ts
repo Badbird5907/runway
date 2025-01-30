@@ -6,17 +6,17 @@ import * as vscode from 'vscode';
 import { URI } from 'vscode/vscode/vs/base/common/uri';
 import { eventBus } from '@/util/event-bus';
 
-type WebContainerState = {
-  status: "booting" | "ready" | "error"
-  ports: number[]
-  serverUrl: string | null
-  lastPreviewMessage: string | null
+// type WebContainerState = {
+//   status: "booting" | "ready" | "error"
+//   ports: number[]
+//   serverUrl: string | null
+//   lastPreviewMessage: string | null
 
-  addPort: (port: number) => void
-  removePort: (port: number) => void
-  setServerUrl: (url: string | null) => void
-  setLastPreviewMessage: (message: string | null) => void
-}
+//   addPort: (port: number) => void
+//   removePort: (port: number) => void
+//   setServerUrl: (url: string | null) => void
+//   setLastPreviewMessage: (message: string | null) => void
+// }
 // export const useWebContainerState = create<WebContainerState>()(
 //   immer((set) => ({
 //     status: "booting",
@@ -84,7 +84,13 @@ const bootWebContainer = async () => {
   wc.on("server-ready", (port, url) => {
     devServerUrl = url;
     eventBus.emit("container:server-ready", { port, url })
-  })
+  });
+
+  wc.on("port", (port) => {
+    eventBus.emit("container:port", port);
+    vscode.window.showWarningMessage(`New port opened: ${port}`);
+  });
+  
   const files = await buildFileTree();
   console.log(files);
   console.log("webcontainer booted, mounting...");
