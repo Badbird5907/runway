@@ -15,13 +15,23 @@ const pkg = JSON.parse(
 const localDependencies = Object.entries(pkg.dependencies as Record<string, string>)
   .filter(([, version]) => version.startsWith('file:../'))
   .map(([name]) => name)
+
+const port = 5173
 export default defineConfig({
   build: {
-    target: 'esnext'
+    target: 'esnext',
+
+    rollupOptions: {
+      input: {
+        main: './index.html',
+        webcontainer: './react-loader.html'
+      }
+    }
   },
   worker: {
     format: 'es'
   },
+  assetsInclude: ['**/*.html'],
   plugins: [
     {
       // For the *-language-features extensions which use SharedArrayBuffer
@@ -99,13 +109,21 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5173,
+    port: port,
     host: '0.0.0.0',
     headers: {
+
       "cross-origin-opener-policy": "same-origin",
       "cross-origin-embedder-policy": "credentialless",
+    },
+    proxy: {
+      "^/webcontainer/.*": {
+        target: `http://localhost:${port}`,
+        rewrite: () => `/react.html`
+      }
     }
   },
+
   define: {
     rootDirectory: JSON.stringify(__dirname)
   },

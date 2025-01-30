@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/webcontainer/:path*",
+      "destination": "/react.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

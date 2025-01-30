@@ -27,11 +27,6 @@ const BeginConnect = () => {
 }
 
 const beginConnect = () => {
-  const body = document.body;
-  const connectContainer = document.createElement("div");
-  connectContainer.id = "root";
-  body.appendChild(connectContainer);
-
-  createRoot(connectContainer).render(<BeginConnect />);
+  createRoot(document.getElementById("root")!).render(<BeginConnect />);
 }
 export default beginConnect

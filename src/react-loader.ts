@@ -1,5 +1,6 @@
 import "./style.css";
 
+console.log("-> react-loader", window.location.pathname)
 if (window.location.pathname.startsWith('/webcontainer/preview/')) {
   const id = window.location.pathname.split('/').pop()
   if (id) {
@@ -11,8 +12,6 @@ if (window.location.pathname.startsWith('/webcontainer/preview/')) {
 } else if (window.location.pathname.startsWith('/webcontainer/connect/')) {
   const beginConnect = await import('./preview/connect')
   beginConnect.default()
-} else {
-  import('@/bootstrapper')
 }
 
 export {}
