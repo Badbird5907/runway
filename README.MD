@@ -26,7 +26,8 @@ Runway is the spiritual successor to [Pyeval](https://pyeval.badbird.dev/) ([Git
 
 ## 🛠️ Technology
 
-Runway is powered by [WebContainers](https://webcontainers.io/), the same technology behind [StackBlitz](https://stackblitz.com/). WebContainers provide a browser-based runtime for executing Node.js applications and operating system commands entirely within your browser tab, eliminating the need for cloud VMs and offering improved performance and security.
+Runway is powered by [WebContainers](https://webcontainers.io/), the same technology behind [StackBlitz](https://stackblitz.com/).
+> **WebContainers are a browser-based runtime for executing Node.js applications and operating system commands, entirely inside your browser tab.**
 
 The project is built with [Vite](https://vite.dev/), [CodinGame/monaco-vscode-api](https://github.com/CodinGame/monaco-vscode-api), and [zen-fs](https://github.com/zen-fs/core) (don't look at the [package.json](https://github.com/Badbird5907/runway/blob/master/package.json))
 
