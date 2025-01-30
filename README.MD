@@ -4,6 +4,8 @@
 
 Runway is a powerful browser-based development environment built on VSCode that brings full-featured coding capabilities directly to your browser tab. Write, compile, and run code in various programming languages through WebAssembly, host web servers, and execute Node.js projects - all client-side without any server-side compute!
 
+Runway is the spiritual successor to [Pyeval](https://pyeval.badbird.dev/) ([GitHub](https://github.com/Badbird5907/pyeval))
+
 ## 🚀 Getting Started
 
 1. Visit [runway.badbird.dev](https://runway.badbird.dev/)
