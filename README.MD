@@ -23,6 +23,7 @@ Runway is the spiritual successor to [Pyeval](https://pyeval.badbird.dev/) ([Git
 - 🔧 **Extensions**: VSCode extension support for enhanced functionality
 - 🔒 **Security**: Sandboxed environment for safe code execution
 - 🚀 **Language Support**: Run any WebAssembly-compatible programming language directly in the browser
+- ⚡ **Fast**: Spins up in seconds
 
 ## 🛠️ Technology
 
