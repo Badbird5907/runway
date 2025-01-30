@@ -2,8 +2,6 @@
 
 [Website](https://runway.badbird.dev/) | [Discord](https://discord.badbird.dev/)
 
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Frunway.badbird.dev)](https://runway.badbird.dev/)
-
 Runway is a powerful browser-based development environment built on VSCode that brings full-featured coding capabilities directly to your browser tab. Write, compile, and run code in various programming languages through WebAssembly, host web servers, and execute Node.js projects - all client-side without any server-side compute!
 
 ## 🚀 Getting Started
