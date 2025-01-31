@@ -17,6 +17,7 @@ Runway is the spiritual successor to [Pyeval](https://pyeval.badbird.dev/) ([Git
 ## ✨ Features
 
 - 🌐 **Web Development**: Host web servers and run Node.js projects seamlessly
+- 🤝 **Collaborate**: Collaborate with your friends. Powered by [OpenCollab](https://www.open-collab.tools/)
 - 💻 **Terminal Access**: Full UNIX-like shell environment
 - 💾 **Persistence**: Built-in UNIX filesystem with persistent storage
 - 📦 **Node.js Compatibility**: Support for most Node.js packages
