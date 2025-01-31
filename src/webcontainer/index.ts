@@ -86,9 +86,21 @@ const bootWebContainer = async () => {
     eventBus.emit("container:server-ready", { port, url })
   });
 
-  wc.on("port", (port) => {
-    eventBus.emit("container:port", port);
-    vscode.window.showWarningMessage(`New port opened: ${port}`);
+  wc.on("port", (port, type, url) => {
+    eventBus.emit("container:port", { port, type, url });
+    if (type === "open") {
+      vscode.window.showInformationMessage(`New port opened: ${port}`, "Copy URL", "Open In Webview").then((result) => {
+        if (result === "Copy URL") {
+          vscode.env.clipboard.writeText(url);
+          vscode.window.showInformationMessage("URL copied to clipboard");
+        } else if (result === "Open In Webview") {
+          eventBus.emit("webview:openUrl", url);
+        }
+      });
+    } else if (type === "close") {
+      vscode.window.showInformationMessage(`Port closed: ${port}`);
+    }
+
   });
   
   const files = await buildFileTree();

@@ -59,12 +59,23 @@ void getApi().then(async (vscode) => {
   });
 
   // listen for container events and reload when it changes
-  eventBus.on("*", (t) => {
+  eventBus.on("*", (t, e) => {
     if (t.toString().startsWith("container:")) {
       provider.reload();
+    } else if (t.toString().startsWith("webview:")) {
+      const [_, action] = t.toString().split(":");
+      switch (action) {
+        case "reload":
+          provider.reload();
+          break;
+        case "openUrl":
+          provider.reload(e as string);
+          break;
+      }
     }
   });
 });
+
 
 class WebviewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -91,7 +102,6 @@ class WebviewProvider implements vscode.WebviewViewProvider {
                 // open a new tab in the browser
                 const baseUrl = window.location.origin;
                 vscode.env.openExternal(vscode.Uri.parse(`${baseUrl}/webcontainer/preview/${containerId}`));
-
 							}
 						})
 
@@ -110,7 +120,7 @@ class WebviewProvider implements vscode.WebviewViewProvider {
     void this.reload();
   }
 
-  public async reload() {
+  public async reload(url = devServerUrl) {
     if (!this._view) {
       return;
     }
@@ -127,7 +137,7 @@ class WebviewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    if (!devServerUrl) {
+    if (!url) {
       this._view.webview.html = `
         <!DOCTYPE html>
         <html>
@@ -148,9 +158,10 @@ class WebviewProvider implements vscode.WebviewViewProvider {
         <meta
           id="runway-webview-settings"
           data-settings='${this.escapeHtml(JSON.stringify({
-            url: devServerUrl,
+            url,
             focusLockIndicatorEnabled: true
           }))}'
+
         />
 
         <style>
