@@ -1,4 +1,4 @@
-# Runway 🚀
+# Runway ✈️
 
 [Website](https://runway.badbird.dev/) | [Discord](https://discord.badbird.dev/)
 
