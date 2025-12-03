@@ -27,5 +27,5 @@ const downloadResource = async (url: string, targetDir: string, filename: string
 // https://marketplace.visualstudio.com/_apis/public/gallery/publishers/${publisher}/vsextensions/${extension}/${version}/vspackage
 
 // not yet used
-await downloadResource('https://marketplace.visualstudio.com/_apis/public/gallery/publishers/TypeFox/vsextensions/open-collaboration-tools/0.2.4/vspackage',
+await downloadResource('https://marketplace.visualstudio.com/_apis/public/gallery/publishers/TypeFox/vsextensions/open-collaboration-tools/0.3.0/vspackage',
     resolve(getLocalDirectory(), './extensions/'), 'open-collaboration-tools.vsix');
